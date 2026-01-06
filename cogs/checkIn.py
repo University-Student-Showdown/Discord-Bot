@@ -36,12 +36,12 @@ class CheckInCommands(commands.Cog):
 
         self.sync_team_data()
 
-    @commands.hybrid_group(name="rl")
+    @commands.hybrid_group(name="rl", aliases=["RocketLeague", "Rocket League"])
     async def rl(self, ctx):
         if ctx.invoked_subcommand is None:
             await ctx.reply("Available subcommands: checkin, checkout, getcaptain")
 
-    @commands.hybrid_group(name="ow")
+    @commands.hybrid_group(name="ow", aliases=["Overwatch", "Overwatch2"])
     async def ow(self, ctx):
         if ctx.invoked_subcommand is None:
             await ctx.reply("Available subcommands: checkin, checkout, getcaptain")
@@ -51,7 +51,7 @@ class CheckInCommands(commands.Cog):
     async def check_in(self, ctx):
         sender : discord.Member = ctx.author
 
-        if (self.checkInActive):
+        if (self.rocket_league.checkInActive):
             message = self.check_in_sheet(sender.name, Game.ROCKET_LEAGUE)
         else:
             message = "Check-Ins are currently closed."
@@ -65,8 +65,8 @@ class CheckInCommands(commands.Cog):
     async def check_in(self, ctx):
         sender : discord.Member = ctx.author
 
-        if (self.checkInActive):
-            message = self.check_in_sheet(sender.name, Game.Overwatch)
+        if (self.overwatch.checkInActive):
+            message = self.check_in_sheet(sender.name, Game.OVERWATCH)
         else:
             message = "Check-Ins are currently closed."
 
@@ -79,7 +79,7 @@ class CheckInCommands(commands.Cog):
     async def check_out(self, ctx):
         sender : discord.Member = ctx.author
 
-        if (self.checkInActive):
+        if (self.rocket_league.checkInActive):
             message = self.check_out_sheet(sender.name, Game.ROCKET_LEAGUE)
         else:
             message = "Check-Ins are currently closed."
@@ -93,7 +93,7 @@ class CheckInCommands(commands.Cog):
     async def check_out(self, ctx):
         sender : discord.Member = ctx.author
 
-        if (self.checkInActive):
+        if (self.overwatch.checkInActive):
             message = self.check_out_sheet(sender.name, Game.OVERWATCH)
         else:
             message = "Check-Ins are currently closed."
@@ -151,19 +151,19 @@ class CheckInCommands(commands.Cog):
     @rl_admincheckin.command(name="open")
     @is_admin()
     async def open_check_in(self, ctx):
-        self.checkInActive = True;
+        self.rocket_league.checkInActive = True;
         await ctx.reply("Check-in has been opened")
 
     @rl_admincheckin.command(name="close")
     @is_admin()
     async def open_check_in(self, ctx):
-        self.checkInActive = False;
+        self.rocket_league.checkInActive = False;
         await ctx.reply("Check-in has been closed")
 
     @rl_admincheckin.command(name="status")
     @is_admin()
     async def open_check_in(self, ctx):
-        if (self.checkInActive):
+        if (self.rocket_league.checkInActive):
             await ctx.reply("Check-in is open")
         else:
             await ctx.reply("Check-in is closed")
@@ -176,19 +176,19 @@ class CheckInCommands(commands.Cog):
     @ow_admincheckin.command(name="open")
     @is_admin()
     async def open_check_in(self, ctx):
-        self.checkInActive = True;
+        self.overwatch.checkInActive = True;
         await ctx.reply("Check-in has been opened")
 
     @ow_admincheckin.command(name="close")
     @is_admin()
     async def open_check_in(self, ctx):
-        self.checkInActive = False;
+        self.overwatch.checkInActive = False;
         await ctx.reply("Check-in has been closed")
 
     @ow_admincheckin.command(name="status")
     @is_admin()
     async def open_check_in(self, ctx):
-        if (self.checkInActive):
+        if (self.overwatch.checkInActive):
             await ctx.reply("Check-in is open")
         else:
             await ctx.reply("Check-in is closed")
