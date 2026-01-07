@@ -4,22 +4,18 @@ from discord.ext import commands
 
 import sys
 from pathlib import Path
-
 parent_dir = Path(__file__).resolve().parent.parent
 
 sys.path.append(str(parent_dir))
-
 from bot import SheetsManagement, Game
-
 USS_COLOUR = 0x992299
 OW_ADMIN_ROLE_NAME = "ow admin"
 RL_ADMIN_ROLE_NAME = "rl admin"
 LEAD_ROLE_NAME = "staff lead"
 
-
 def is_admin():
     async def predicate(ctx):
-        return any((role.name.lower() == OW_ADMIN_ROLE_NAME or  role.name.lower() == RL_ADMIN_ROLE_NAME or role.name.lower() == LEAD_ROLE_NAME) for role in ctx.author.roles)
+        return any((role.name.lower() == OW_ADMIN_ROLE_NAME or role.name.lower() == RL_ADMIN_ROLE_NAME or role.name.lower() == LEAD_ROLE_NAME) for role in ctx.author.roles)
     return commands.check(predicate)
 
 class GameData():
@@ -36,12 +32,12 @@ class CheckInCommands(commands.Cog):
 
         self.sync_team_data()
 
-    @commands.hybrid_group(name="rl", aliases=["RocketLeague", "Rocket League"])
+    @commands.hybrid_group(name="rl", aliases=["RocketLeague", "Rocket League", "rocketleague"])
     async def rl(self, ctx):
         if ctx.invoked_subcommand is None:
             await ctx.reply("Available subcommands: checkin, checkout, getcaptain")
 
-    @commands.hybrid_group(name="ow", aliases=["Overwatch", "Overwatch2"])
+    @commands.hybrid_group(name="ow", aliases=["Overwatch", "Overwatch2", "overwatch"])
     async def ow(self, ctx):
         if ctx.invoked_subcommand is None:
             await ctx.reply("Available subcommands: checkin, checkout, getcaptain")
@@ -113,8 +109,6 @@ class CheckInCommands(commands.Cog):
             {self.rocket_league.teamsMapped[team.lower()]['conn']}
             {self.rocket_league.teamsMapped[team.lower()]['conn2']}
             {self.rocket_league.teamsMapped[team.lower()]['conn3']}
-            {self.rocket_league.teamsMapped[team.lower()]['conn4']}
-            {self.rocket_league.teamsMapped[team.lower()]['conn5']}
             """
         embed = discord.Embed(title="USS - Rocket League", description=message, colour=USS_COLOUR)
         embed.set_thumbnail(url="https://pbs.twimg.com/profile_images/1969783689090363392/v_27TFgp_400x400.jpg")

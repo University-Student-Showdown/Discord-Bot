@@ -92,16 +92,13 @@ class SheetsManagement():
         body = {"values": data}
         
         sheet = self.get_admin_sheet(game);
-        result = (
-            self.service.spreadsheets()
-            .values()
-            .update(
+        result = (self.service.spreadsheets()
+            .values().update(
                 spreadsheetId=sheet,
                 range=query,
                 valueInputOption="USER_ENTERED",
                 body=body,
-            )
-            .execute())
+            ).execute())
 
     def read_data(self, query, game):
         sheet = self.get_admin_sheet(game);
