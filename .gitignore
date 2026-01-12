@@ -3,3 +3,4 @@ credentials.json
 token.json
 __pycache__/bot.cpython-311.pyc
 cogs/__pycache__/checkIn.cpython-311.pyc
+discord.log

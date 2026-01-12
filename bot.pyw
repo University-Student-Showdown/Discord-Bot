@@ -2,6 +2,8 @@ from enum import Enum
 import discord
 from discord.ext import commands
 
+import logging
+
 from os import listdir
 from datetime import datetime
 
@@ -114,9 +116,11 @@ def main():
     INTENTS.message_content = True
     INTENTS.members = True
 
+    handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
+
     client = MyBot(command_prefix='!', intents=INTENTS)
     
-    client.run(os.environ.get('DISCORD_BOT_TOKEN'))
+    client.run(os.environ.get('DISCORD_BOT_TOKEN'), log_handler=handler, root_logger=True)
 
 if __name__ == "__main__":
     main()
