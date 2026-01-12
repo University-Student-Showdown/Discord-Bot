@@ -22,7 +22,7 @@ class GameData():
     def __init__(self):
         self.teamsMapped = {}
         self.teamsMapped_user = {}
-        self.checkInActive = {}
+        self.checkInActive = False
 
 class CheckInCommands(commands.Cog):
     def __init__(self, bot):
@@ -212,15 +212,17 @@ class CheckInCommands(commands.Cog):
             self.overwatch.teamsMapped_user[row[1].lower()] = {"team_name":row[0], "conn": row[2], "conn2": row[3], "conn3": row[4], "conn4": row[5], "conn5": row[6]}
         
         print(self.rocket_league.teamsMapped)
+        print(self.rocket_league.teamsMapped_user)
 
     def get_team_from_user(self, username : str, game: Game):
         gameObj = self.get_game_obj(game)
         if username not in gameObj.teamsMapped_user: return "N/A"
 
-        return self.teamsMapped_user[username]["team_name"]
+        return gameObj.teamsMapped_user[username]["team_name"]
 
     def find_and_flip_checkin(self, teamName : str, checkin : bool, game: Game):
-        if teamName == "N/A": return "You are not registered as a captain\n\nIf you believe this is wrong, please contact an admin"
+        if teamName == "N/A":
+            return "You are not registered as a captain\n\nIf you believe this is wrong, please contact an admin"
         data : list = self.manager.read_data("Datasheet!A2:C", game)
 
         i = 2
@@ -239,6 +241,8 @@ class CheckInCommands(commands.Cog):
                     return f"Checked out {teamName}"
 
             i = i+1
+
+        return "You are not registered as a captain\n\nIf you believe this is wrong, please contact an admin"
 
     def check_in_sheet(self, username:str, game: Game):
         return self.find_and_flip_checkin(self.get_team_from_user(username.lower(), game),True, game)
