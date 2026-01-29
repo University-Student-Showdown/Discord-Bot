@@ -52,9 +52,7 @@ class CheckInCommands(commands.Cog):
         else:
             message = "Check-Ins are currently closed."
 
-        embed = discord.Embed(title="USS Checkin - Rocket League", description=message, colour=USS_COLOUR)
-        embed.set_thumbnail(url="https://pbs.twimg.com/profile_images/1969783689090363392/v_27TFgp_400x400.jpg")
-
+        embed = self.custom_embed(title="USS - Rocket League", description=message)
         await ctx.reply(embed=embed)
 
     @ow.command(name="checkin")
@@ -66,9 +64,7 @@ class CheckInCommands(commands.Cog):
         else:
             message = "Check-Ins are currently closed."
 
-        embed = discord.Embed(title="USS Checkin - Overwatch", description=message, colour=USS_COLOUR)
-        embed.set_thumbnail(url="https://pbs.twimg.com/profile_images/1969783689090363392/v_27TFgp_400x400.jpg")
-
+        embed = self.custom_embed(title="USS - Overwatch", description=message)
         await ctx.reply(embed=embed)
 
     @rl.command(name="checkout")
@@ -80,9 +76,7 @@ class CheckInCommands(commands.Cog):
         else:
             message = "Check-Ins are currently closed."
             
-        embed = discord.Embed(title="USS Checkin - Rocket League", description=message, colour=USS_COLOUR)
-        embed.set_thumbnail(url="https://pbs.twimg.com/profile_images/1969783689090363392/v_27TFgp_400x400.jpg")
-
+        embed = self.custom_embed(title="USS - Rocket League", description=message)
         await ctx.reply(embed=embed)
 
     @ow.command(name="checkout")
@@ -94,9 +88,7 @@ class CheckInCommands(commands.Cog):
         else:
             message = "Check-Ins are currently closed."
             
-        embed = discord.Embed(title="USS Checkin - Overwatch", description=message, colour=USS_COLOUR)
-        embed.set_thumbnail(url="https://pbs.twimg.com/profile_images/1969783689090363392/v_27TFgp_400x400.jpg")
-
+        embed = self.custom_embed(title="USS - Overwatch", description=message)
         await ctx.reply(embed=embed)
 
     @rl.command(name="getcaptain")
@@ -104,14 +96,12 @@ class CheckInCommands(commands.Cog):
         if team.lower() not in self.rocket_league.teamsMapped:
             message = f"Could not find team {team}"
         else:
+            players = "\n".join(f"- {con}" for con in self.rocket_league.teamsMapped[team.lower()]['connections'])
             message = f"""**{self.rocket_league.teamsMapped[team.lower()]['formalised_name']}**\nCaptain's Discord: {self.rocket_league.teamsMapped[team.lower()]['discord']}\n
             **Players:**
-            {self.rocket_league.teamsMapped[team.lower()]['conn']}
-            {self.rocket_league.teamsMapped[team.lower()]['conn2']}
-            {self.rocket_league.teamsMapped[team.lower()]['conn3']}
+            {players}
             """
-        embed = discord.Embed(title="USS - Rocket League", description=message, colour=USS_COLOUR)
-        embed.set_thumbnail(url="https://pbs.twimg.com/profile_images/1969783689090363392/v_27TFgp_400x400.jpg")
+        embed = self.custom_embed(title="USS - Rocket League", description=message)
         await ctx.reply(embed=embed)
 
     @ow.command(name="getcaptain")
@@ -119,17 +109,18 @@ class CheckInCommands(commands.Cog):
         if team.lower() not in self.overwatch.teamsMapped:
             message = f"Could not find team {team}"
         else:
+            players = "\n".join(f"- {con}" for con in self.overwatch.teamsMapped[team.lower()]['connections'])
             message = f"""**{self.overwatch.teamsMapped[team.lower()]['formalised_name']}**\nCaptain's Discord: {self.overwatch.teamsMapped[team.lower()]['discord']}\n
             **Players:**
-            {self.overwatch.teamsMapped[team.lower()]['conn']}
-            {self.overwatch.teamsMapped[team.lower()]['conn2']}
-            {self.overwatch.teamsMapped[team.lower()]['conn3']}
-            {self.overwatch.teamsMapped[team.lower()]['conn4']}
-            {self.overwatch.teamsMapped[team.lower()]['conn5']}
+            {players}
             """
-        embed = discord.Embed(title="USS - Overwatch", description=message, colour=USS_COLOUR)
-        embed.set_thumbnail(url="https://pbs.twimg.com/profile_images/1969783689090363392/v_27TFgp_400x400.jpg")
+        embed = self.custom_embed(title="USS - Overwatch", description=message)
         await ctx.reply(embed=embed)
+
+    def custom_embed(self, title, description):
+        embed = discord.Embed(title=title, description=description, colour=USS_COLOUR)
+        embed.set_thumbnail(url="https://pbs.twimg.com/profile_images/2015895728149696512/SfKjcwoz_400x400.jpg")
+        return embed
 
     @commands.hybrid_command(name="refreshteamdata")
     @is_admin()
@@ -197,22 +188,30 @@ class CheckInCommands(commands.Cog):
             return self.overwatch
         else:
             return self.rocket_league
+        
+    def grab_all_exist(self, row : list):
+        connections : list = []
+        for cell in row:
+            if cell != "":
+                connections.append(cell);
+            else:
+                continue;
+
+        return connections;
 
     def sync_team_data(self):
         self.rocket_league.teamsMapped.clear()
-        data : list = self.manager.read_data("TeamContact!A2:G", Game.ROCKET_LEAGUE)
+        data : list = self.manager.read_data("TeamContact!A2:H", Game.ROCKET_LEAGUE)
         for row in data:
-            self.rocket_league.teamsMapped[row[0].lower()] = {"discord":row[1], "conn": row[2], "conn2": row[3], "conn3": row[4], "conn4": row[5], "conn5": row[6], "formalised_name": row[0]}
-            self.rocket_league.teamsMapped_user[row[1].lower()] = {"team_name":row[0], "conn": row[2], "conn2": row[3], "conn3": row[4], "conn4": row[5], "conn5": row[6]}
+            self.rocket_league.teamsMapped[row[0].lower()] = {"discord":row[1], "connections": self.grab_all_exist(row[2:]), "formalised_name": row[0]}
+            self.rocket_league.teamsMapped_user[row[1].lower()] = {"team_name":row[0], "connections": self.grab_all_exist(row[2:])}
 
         self.overwatch.teamsMapped.clear()
-        data : list = self.manager.read_data("TeamContact!A2:G", Game.OVERWATCH)
+        data : list = self.manager.read_data("TeamContact!A2:L", Game.OVERWATCH)
         for row in data:
-            self.overwatch.teamsMapped[row[0].lower()] = {"discord":row[1], "conn": row[2], "conn2": row[3], "conn3": row[4], "conn4": row[5], "conn5": row[6], "formalised_name": row[0]}
-            self.overwatch.teamsMapped_user[row[1].lower()] = {"team_name":row[0], "conn": row[2], "conn2": row[3], "conn3": row[4], "conn4": row[5], "conn5": row[6]}
-        
-        print(self.rocket_league.teamsMapped)
-        print(self.rocket_league.teamsMapped_user)
+            self.overwatch.teamsMapped[row[0].lower()] = {"discord":row[1], "connections": self.grab_all_exist(row[2:]), "formalised_name": row[0]}
+            self.overwatch.teamsMapped_user[row[1].lower()] = {"team_name":row[0], "connections": self.grab_all_exist(row[2:])}
+
 
     def get_team_from_user(self, username : str, game: Game):
         gameObj = self.get_game_obj(game)
