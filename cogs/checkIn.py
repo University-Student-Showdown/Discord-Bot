@@ -93,7 +93,7 @@ class CheckInCommands(commands.Cog):
         embed = self.custom_embed(title="USS - Overwatch", description=message)
         await ctx.reply(embed=embed)
 
-    @rl.command(name="getcaptain")
+    @rl.command(name="getteam")
     async def get_connection(self, ctx, team :str):
         if team.lower() not in self.rocket_league.teamsMapped:
             message = f"Could not find team {team}"
@@ -116,7 +116,7 @@ class CheckInCommands(commands.Cog):
         except:
             return "Unverified (Error)"
 
-    @ow.command(name="getcaptain")
+    @ow.command(name="getteam")
     async def get_connection(self, ctx, team :str):
         if team.lower() not in self.overwatch.teamsMapped:
             message = f"Could not find team {team}"
@@ -140,6 +140,10 @@ class CheckInCommands(commands.Cog):
         self.sync_team_data()
         await ctx.reply("Refreshed data")
 
+    @commands.hybrid_command(name="checkverification")
+    async def check_verification(self, ctx, username:str):
+        msg = f"{username} -> **{self.add_status(username)}**";
+        await ctx.reply(embed=self.custom_embed("Verification Check", description=msg))
 
     @rl.group(name="admincheckin")
     async def rl_admincheckin(self, ctx):
