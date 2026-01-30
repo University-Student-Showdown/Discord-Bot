@@ -1,6 +1,7 @@
+from datetime import datetime
 from enum import Enum
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 import sys
 from pathlib import Path
@@ -9,7 +10,7 @@ parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
 from bot import SheetsManagement, Game
 USS_COLOUR = 0x992299
-OW_ADMIN_ROLE_NAME = "ow admin"
+OW_ADMIN_ROLE_NAME = "ow2 admin"
 RL_ADMIN_ROLE_NAME = "rl admin"
 LEAD_ROLE_NAME = "staff lead"
 
@@ -27,12 +28,21 @@ class GameData():
 class CheckInCommands(commands.Cog):
     def __init__(self, bot):
         self.manager = SheetsManagement()
-        self.overwatch = GameData();
-        self.rocket_league = GameData();
-        self.verifiedPlayersMap = {};
+        self.overwatch = GameData()
+        self.rocket_league = GameData()
+        self.verifiedPlayersMap = {}
+        self.lastRefresh : datetime = datetime.now()
 
         self.sync_team_data()
         self.sync_verified_players()
+
+        self.refresh_task.start()  
+        
+    @tasks.loop(minutes=5) 
+    async def refresh_task(self):
+        self.sync_team_data()
+        self.sync_verified_players()
+        self.lastRefresh = datetime.now()
 
     @commands.hybrid_group(name="rocketleague", aliases=["RL", "rl", "Rocket League", "RocketLeague"])
     async def rl(self, ctx):
@@ -103,7 +113,7 @@ class CheckInCommands(commands.Cog):
             **Players:**
             {players}
             """
-        embed = self.custom_embed(title="USS - Rocket League", description=message)
+        embed = self.custom_embed(title="USS - Rocket League", description=message, lastUpdate=True)
         await ctx.reply(embed=embed)
 
     def add_status(self, name : str):
@@ -112,7 +122,7 @@ class CheckInCommands(commands.Cog):
                 return "Unverified :x:";
             if self.verifiedPlayersMap[name.lower()].lower() == "verified":
                 return "Verified ✅"
-            return "Pending Verification"
+            return "Pending Verification 🟨"
         except:
             return "Unverified (Error)"
 
@@ -126,11 +136,12 @@ class CheckInCommands(commands.Cog):
             **Players:**
             {players}
             """
-        embed = self.custom_embed(title="USS - Overwatch", description=message)
+        embed = self.custom_embed(title="USS - Overwatch", description=message, lastUpdate=True)
         await ctx.reply(embed=embed)
 
-    def custom_embed(self, title, description):
+    def custom_embed(self, title, description, lastUpdate=False):
         embed = discord.Embed(title=title, description=description, colour=USS_COLOUR)
+        if lastUpdate: embed.set_footer(text=f"Last Roster Update: {self.lastRefresh}")
         embed.set_thumbnail(url="https://pbs.twimg.com/profile_images/2015895728149696512/SfKjcwoz_400x400.jpg")
         return embed
 
@@ -138,12 +149,14 @@ class CheckInCommands(commands.Cog):
     @is_admin()
     async def refresh_team_data(self, ctx):
         self.sync_team_data()
-        await ctx.reply("Refreshed data")
+        self.sync_verified_players()
+        self.lastRefresh = datetime.now()
+        await ctx.reply("Refreshed data..")
 
     @commands.hybrid_command(name="checkverification")
     async def check_verification(self, ctx, username:str):
         msg = f"{username} -> **{self.add_status(username)}**";
-        await ctx.reply(embed=self.custom_embed("Verification Check", description=msg))
+        await ctx.reply(embed=self.custom_embed("Verification Check", description=msg, lastUpdate=True))
 
     @rl.group(name="admincheckin")
     async def rl_admincheckin(self, ctx):
