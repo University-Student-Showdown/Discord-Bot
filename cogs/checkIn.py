@@ -29,8 +29,10 @@ class CheckInCommands(commands.Cog):
         self.manager = SheetsManagement()
         self.overwatch = GameData();
         self.rocket_league = GameData();
+        self.verifiedPlayersMap = {};
 
         self.sync_team_data()
+        self.sync_verified_players()
 
     @commands.hybrid_group(name="rocketleague", aliases=["RL", "rl", "Rocket League", "RocketLeague"])
     async def rl(self, ctx):
@@ -96,7 +98,7 @@ class CheckInCommands(commands.Cog):
         if team.lower() not in self.rocket_league.teamsMapped:
             message = f"Could not find team {team}"
         else:
-            players = "\n".join(f"- {con}" for con in self.rocket_league.teamsMapped[team.lower()]['connections'])
+            players = "\n".join(f"- {con} | **{self.add_status(con)}**" for con in self.rocket_league.teamsMapped[team.lower()]['connections'])
             message = f"""**{self.rocket_league.teamsMapped[team.lower()]['formalised_name']}**\nCaptain's Discord: {self.rocket_league.teamsMapped[team.lower()]['discord']}\n
             **Players:**
             {players}
@@ -104,12 +106,22 @@ class CheckInCommands(commands.Cog):
         embed = self.custom_embed(title="USS - Rocket League", description=message)
         await ctx.reply(embed=embed)
 
+    def add_status(self, name : str):
+        try:
+            if name.lower() not in self.verifiedPlayersMap.keys():
+                return "Unverified :x:";
+            if self.verifiedPlayersMap[name.lower()].lower() == "verified":
+                return "Verified ✅"
+            return "Pending Verification"
+        except:
+            return "Unverified (Error)"
+
     @ow.command(name="getcaptain")
     async def get_connection(self, ctx, team :str):
         if team.lower() not in self.overwatch.teamsMapped:
             message = f"Could not find team {team}"
         else:
-            players = "\n".join(f"- {con}" for con in self.overwatch.teamsMapped[team.lower()]['connections'])
+            players = "\n".join(f"- {con} | **{self.add_status(con)}**" for con in self.overwatch.teamsMapped[team.lower()]['connections'])
             message = f"""**{self.overwatch.teamsMapped[team.lower()]['formalised_name']}**\nCaptain's Discord: {self.overwatch.teamsMapped[team.lower()]['discord']}\n
             **Players:**
             {players}
@@ -211,6 +223,15 @@ class CheckInCommands(commands.Cog):
         for row in data:
             self.overwatch.teamsMapped[row[0].lower()] = {"discord":row[1], "connections": self.grab_all_exist(row[2:]), "formalised_name": row[0]}
             self.overwatch.teamsMapped_user[row[1].lower()] = {"team_name":row[0], "connections": self.grab_all_exist(row[2:])}
+
+    def sync_verified_players(self):
+        self.verifiedPlayersMap.clear()
+
+        data: list = self.manager.read_verified()
+
+        for acc in data:
+            if (len(acc) > 1):
+                self.verifiedPlayersMap[acc[1].lower()] = acc[0]
 
 
     def get_team_from_user(self, username : str, game: Game):

@@ -46,6 +46,7 @@ class SheetsManagement():
         creds = None
         self.OW_ADMIN_SHEET = os.environ.get("OW_ADMIN_SHEET")
         self.RL_ADMIN_SHEET = os.environ.get("RL_ADMIN_SHEET")
+        self.VERIFICATION_SHEET = os.environ.get("VERIFICATION_SHEET")
 
         BASE_DIR = os.path.dirname(os.path.abspath(__file__))
         TOKEN_PATH = os.path.join(BASE_DIR, "token.json")
@@ -108,8 +109,18 @@ class SheetsManagement():
         self.sheet.values()
         .get(spreadsheetId=sheet, range=query)
         .execute())
-
         return result.get("values", [])
+    
+    def read_verified(self):
+        result = (
+        self.sheet.values()
+        .get(spreadsheetId=self.VERIFICATION_SHEET, range="Sheet1!C:F")
+        .execute())
+        values = result.get("values", [])
+        col_indexes = [0, 3] 
+
+        return [[row[i] for i in col_indexes if i < len(row)] for row in values]
+        
 
 def main():
     INTENTS = discord.Intents.default()
