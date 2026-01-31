@@ -10,14 +10,20 @@ parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
 from bot import SheetsManagement, Game
 USS_COLOUR = 0x992299
-OW_ADMIN_ROLE_NAME = "ow2 admin"
-RL_ADMIN_ROLE_NAME = "rl admin"
-LEAD_ROLE_NAME = "staff lead"
+ADMIN_ROLES = ["ow2 admin", "rl admin", "staff lead"]
+#CHANNEL_NAMES = ["bot", "check"] # Channels with these words allow commands
 
 def is_admin():
     async def predicate(ctx):
-        return any((role.name.lower() == OW_ADMIN_ROLE_NAME or role.name.lower() == RL_ADMIN_ROLE_NAME or role.name.lower() == LEAD_ROLE_NAME) for role in ctx.author.roles)
+        return any((role.name.lower() in ADMIN_ROLES) for role in ctx.author.roles)
     return commands.check(predicate)
+
+"""
+def allowed_channel():
+    async def predicate(ctx):
+        return any(word in ctx.channel.name.lower() for word in CHANNEL_NAMES)
+ return commands.check(predicate)
+    """
 
 class GameData():
     def __init__(self):
@@ -44,76 +50,57 @@ class CheckInCommands(commands.Cog):
         self.sync_verified_players()
         self.lastRefresh = datetime.now()
 
+    #@allowed_channel()
     @commands.hybrid_group(name="rocketleague", aliases=["RL", "rl", "Rocket League", "RocketLeague"])
     async def rl(self, ctx):
         if ctx.invoked_subcommand is None:
             await ctx.reply("Available subcommands: checkin, checkout, getcaptain")
 
+    #@allowed_channel()
     @commands.hybrid_group(name="overwatch", aliases=["OW", "ow", "Overwatch2", "Overwatch"])
     async def ow(self, ctx):
         if ctx.invoked_subcommand is None:
             await ctx.reply("Available subcommands: checkin, checkout, getcaptain")
 
-    
+
     @rl.command(name="checkin")
-    async def check_in(self, ctx):
-        sender : discord.Member = ctx.author
-
-        if (self.rocket_league.checkInActive):
-            message = self.check_in_sheet(sender.name, Game.ROCKET_LEAGUE)
-        else:
-            message = "Check-Ins are currently closed."
-
-        embed = self.custom_embed(title="USS - Rocket League", description=message)
-        await ctx.reply(embed=embed)
+    async def check_in_rl(self, ctx):
+        self.check_in(ctx, Game.ROCKET_LEAGUE)
 
     @ow.command(name="checkin")
-    async def check_in(self, ctx):
+    async def check_in_ow(self, ctx):
+        self.check_in(ctx, Game.OVERWATCH)
+
+    async def check_in(self, ctx, game:Game):
+        gameObj = self.get_game_obj(game);
         sender : discord.Member = ctx.author
 
-        if (self.overwatch.checkInActive):
-            message = self.check_in_sheet(sender.name, Game.OVERWATCH)
+        if (gameObj.checkInActive):
+            message = self.check_in_sheet(sender.name, game)
         else:
             message = "Check-Ins are currently closed."
 
-        embed = self.custom_embed(title="USS - Overwatch", description=message)
+        embed = self.custom_embed(description=message, game=game)
         await ctx.reply(embed=embed)
 
     @rl.command(name="checkout")
-    async def check_out(self, ctx):
-        sender : discord.Member = ctx.author
-
-        if (self.rocket_league.checkInActive):
-            message = self.check_out_sheet(sender.name, Game.ROCKET_LEAGUE)
-        else:
-            message = "Check-Ins are currently closed."
-            
-        embed = self.custom_embed(title="USS - Rocket League", description=message)
-        await ctx.reply(embed=embed)
+    async def check_out_rl(self, ctx):
+        await self.check_out(ctx, Game.ROCKET_LEAGUE)
 
     @ow.command(name="checkout")
-    async def check_out(self, ctx):
+    async def check_out_ow(self, ctx):
+        await self.check_out(ctx, Game.OVERWATCH)
+
+    async def check_out(self, ctx, game:Game):
+        gameObj = self.get_game_obj(game);
         sender : discord.Member = ctx.author
 
-        if (self.overwatch.checkInActive):
-            message = self.check_out_sheet(sender.name, Game.OVERWATCH)
+        if (gameObj.checkInActive):
+            message = self.check_out_sheet(sender.name, game)
         else:
             message = "Check-Ins are currently closed."
             
-        embed = self.custom_embed(title="USS - Overwatch", description=message)
-        await ctx.reply(embed=embed)
-
-    @rl.command(name="getteam")
-    async def get_connection(self, ctx, team :str):
-        if team.lower() not in self.rocket_league.teamsMapped:
-            message = f"Could not find team {team}"
-        else:
-            players = "\n".join(f"- {con} | **{self.add_status(con)}**" for con in self.rocket_league.teamsMapped[team.lower()]['connections'])
-            message = f"""**{self.rocket_league.teamsMapped[team.lower()]['formalised_name']}**\nCaptain's Discord: {self.rocket_league.teamsMapped[team.lower()]['discord']}\n
-            **Players:**
-            {players}
-            """
-        embed = self.custom_embed(title="USS - Rocket League", description=message, lastUpdate=True)
+        embed = self.custom_embed(description=message, game=game)
         await ctx.reply(embed=embed)
 
     def add_status(self, name : str):
@@ -126,24 +113,26 @@ class CheckInCommands(commands.Cog):
         except:
             return "Unverified (Error)"
 
+    @rl.command(name="getteam")
+    async def get_connection_rl(self, ctx, team :str):
+        await self.get_connection(ctx, team, Game.ROCKET_LEAGUE)
+
     @ow.command(name="getteam")
-    async def get_connection(self, ctx, team :str):
-        if team.lower() not in self.overwatch.teamsMapped:
-            message = f"Could not find team {team}"
+    async def get_connection_ow(self, ctx, team :str):
+        await self.get_connection(ctx, team, Game.OVERWATCH)
+
+    async def get_connection(self, ctx, team:str, game:Game):
+        gameObj = self.get_game_obj(game);
+        if team.lower() not in gameObj.teamsMapped:
+                message = f"Could not find team {team}"
         else:
-            players = "\n".join(f"- {con} | **{self.add_status(con)}**" for con in self.overwatch.teamsMapped[team.lower()]['connections'])
-            message = f"""**{self.overwatch.teamsMapped[team.lower()]['formalised_name']}**\nCaptain's Discord: {self.overwatch.teamsMapped[team.lower()]['discord']}\n
+            players = "\n".join(f"- {con} | **{self.add_status(con)}**" for con in gameObj.teamsMapped[team.lower()]['connections'])
+            message = f"""**{gameObj.teamsMapped[team.lower()]['formalised_name']}**\nCaptain's Discord: {gameObj.teamsMapped[team.lower()]['discord']}\n
             **Players:**
             {players}
             """
-        embed = self.custom_embed(title="USS - Overwatch", description=message, lastUpdate=True)
+        embed = self.custom_embed(description=message, lastUpdate=True, game=game)
         await ctx.reply(embed=embed)
-
-    def custom_embed(self, title, description, lastUpdate=False):
-        embed = discord.Embed(title=title, description=description, colour=USS_COLOUR)
-        if lastUpdate: embed.set_footer(text=f"Last Roster Update: {self.lastRefresh}")
-        embed.set_thumbnail(url="https://pbs.twimg.com/profile_images/2015895728149696512/SfKjcwoz_400x400.jpg")
-        return embed
 
     @commands.hybrid_command(name="refreshteamdata")
     @is_admin()
@@ -161,52 +150,57 @@ class CheckInCommands(commands.Cog):
     @rl.group(name="admincheckin")
     async def rl_admincheckin(self, ctx):
         return
-
-    @rl_admincheckin.command(name="open")
-    @is_admin()
-    async def open_check_in(self, ctx):
-        self.rocket_league.checkInActive = True;
-        await ctx.reply("Check-ins have been opened")
-
-    @rl_admincheckin.command(name="close")
-    @is_admin()
-    async def open_check_in(self, ctx):
-        self.rocket_league.checkInActive = False;
-        await ctx.reply("Check-ins have been closed")
-
-    @rl_admincheckin.command(name="status")
-    @is_admin()
-    async def open_check_in(self, ctx):
-        if (self.rocket_league.checkInActive):
-            await ctx.reply("Check-ins are open")
-        else:
-            await ctx.reply("Check-ins are closed")
-
-
+    
     @ow.group(name="admincheckin")
     async def ow_admincheckin(self, ctx):
         return
+    
+    ## Checkin Open/close
+
+    @rl_admincheckin.command(name="open")
+    @is_admin()
+    async def open_check_in_rl(self, ctx):
+        await self.set_check_in(ctx, Game.ROCKET_LEAGUE, True)
 
     @ow_admincheckin.command(name="open")
     @is_admin()
-    async def open_check_in(self, ctx):
-        self.overwatch.checkInActive = True;
-        await ctx.reply("Check-ins have been opened")
+    async def open_check_in_ow(self, ctx):
+        await self.set_check_in(ctx, Game.OVERWATCH, True)
+
+    @rl_admincheckin.command(name="close")
+    @is_admin()
+    async def close_check_in_rl(self, ctx):
+        await self.set_check_in(ctx, Game.ROCKET_LEAGUE, False)
 
     @ow_admincheckin.command(name="close")
     @is_admin()
-    async def open_check_in(self, ctx):
-        self.overwatch.checkInActive = False;
-        await ctx.reply("Check-ins have been closed")
+    async def close_check_in_ow(self, ctx):
+        await self.set_check_in(ctx, Game.OVERWATCH, False)
 
+    async def set_check_in(self, ctx, game:Game, isOpen:bool):
+        gameObj = self.get_game_obj(game);
+        gameObj.checkInActive = isOpen;
+        await ctx.reply(f"Check-ins have been {'opened' if isOpen else 'closed'}")
+
+    ## Checkin Status
+
+    @rl_admincheckin.command(name="status")
+    @is_admin()
+    async def status_check_in_rl(self, ctx):
+        await self.status_check_in(ctx, Game.ROCKET_LEAGUE)
+    
     @ow_admincheckin.command(name="status")
     @is_admin()
-    async def open_check_in(self, ctx):
-        if (self.overwatch.checkInActive):
+    async def status_check_in_ow(self, ctx):
+        await self.status_check_in(ctx, Game.OVERWATCH)
+
+    async def status_check_in(self, ctx, game:Game):
+        gameObj = self.get_game_obj(game);
+        if (gameObj.checkInActive):
             await ctx.reply("Check-ins are open")
         else:
             await ctx.reply("Check-ins are closed")
-    
+
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CheckFailure):
@@ -218,6 +212,12 @@ class CheckInCommands(commands.Cog):
         else:
             return self.rocket_league
         
+    def get_game_string(self, game:Game):
+        if (game == Game.OVERWATCH):
+            return "Overwatch"
+        else:
+            return "Rocket League"
+        
     def grab_all_exist(self, row : list):
         connections : list = []
         for cell in row:
@@ -227,6 +227,12 @@ class CheckInCommands(commands.Cog):
                 continue;
 
         return connections;
+
+    def custom_embed(self, description, lastUpdate=False, game : Game = Game.OVERWATCH ):
+        embed = discord.Embed(title=f"USS - {self.get_game_string(game)}", description=description, colour=USS_COLOUR)
+        if lastUpdate: embed.set_footer(text=f"Last Data Update: {self.lastRefresh.strftime('%d/%m/%Y at %H:%M UTC')}")
+        embed.set_thumbnail(url="https://pbs.twimg.com/profile_images/2015895728149696512/SfKjcwoz_400x400.jpg")
+        return embed
 
     def sync_team_data(self):
         self.rocket_league.teamsMapped.clear()
@@ -249,7 +255,6 @@ class CheckInCommands(commands.Cog):
         for acc in data:
             if (len(acc) > 1):
                 self.verifiedPlayersMap[acc[1].lower()] = acc[0]
-
 
     def get_team_from_user(self, username : str, game: Game):
         gameObj = self.get_game_obj(game)
