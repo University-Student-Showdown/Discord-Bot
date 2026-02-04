@@ -235,17 +235,20 @@ class CheckInCommands(commands.Cog):
         return embed
 
     def sync_team_data(self):
-        self.rocket_league.teamsMapped.clear()
-        data : list = self.manager.read_data("TeamContact!A2:H", Game.ROCKET_LEAGUE)
-        for row in data:
-            self.rocket_league.teamsMapped[row[0].lower()] = {"discord":row[1], "connections": self.grab_all_exist(row[2:]), "formalised_name": row[0]}
-            self.rocket_league.teamsMapped_user[row[1].lower()] = {"team_name":row[0], "connections": self.grab_all_exist(row[2:])}
+        try:
+            self.rocket_league.teamsMapped.clear()
+            data : list = self.manager.read_data("TeamContact!A2:H", Game.ROCKET_LEAGUE)
+            for row in data:
+                self.rocket_league.teamsMapped[row[0].lower()] = {"discord":row[1], "connections": self.grab_all_exist(row[2:]), "formalised_name": row[0]}
+                self.rocket_league.teamsMapped_user[row[1].lower()] = {"team_name":row[0], "connections": self.grab_all_exist(row[2:])}
 
-        self.overwatch.teamsMapped.clear()
-        data : list = self.manager.read_data("TeamContact!A2:L", Game.OVERWATCH)
-        for row in data:
-            self.overwatch.teamsMapped[row[0].lower()] = {"discord":row[1], "connections": self.grab_all_exist(row[2:]), "formalised_name": row[0]}
-            self.overwatch.teamsMapped_user[row[1].lower()] = {"team_name":row[0], "connections": self.grab_all_exist(row[2:])}
+            self.overwatch.teamsMapped.clear()
+            data : list = self.manager.read_data("TeamContact!A2:L", Game.OVERWATCH)
+            for row in data:
+                self.overwatch.teamsMapped[row[0].lower()] = {"discord":row[1], "connections": self.grab_all_exist(row[2:]), "formalised_name": row[0]}
+                self.overwatch.teamsMapped_user[row[1].lower()] = {"team_name":row[0], "connections": self.grab_all_exist(row[2:])}
+        except:
+            print("Error loading team data..")
 
     def sync_verified_players(self):
         self.verifiedPlayersMap.clear()
