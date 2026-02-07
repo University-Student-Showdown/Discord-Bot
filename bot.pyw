@@ -112,14 +112,18 @@ class SheetsManagement():
         return result.get("values", [])
     
     def read_verified(self):
-        result = (
-        self.sheet.values()
-        .get(spreadsheetId=self.VERIFICATION_SHEET, range="Sheet1!C:F")
-        .execute())
-        values = result.get("values", [])
-        col_indexes = [0, 3] 
+        try:
+            result = (
+            self.sheet.values()
+            .get(spreadsheetId=self.VERIFICATION_SHEET, range="Sheet1!C:F")
+            .execute())
+            values = result.get("values", [])
+            col_indexes = [0, 3] 
 
-        return [[row[i] for i in col_indexes if i < len(row)] for row in values]
+            return [[row[i] for i in col_indexes if i < len(row)] for row in values]
+        except:
+            logging.log(5, "Verification could not be read..")
+            return [];
         
 
 def main():

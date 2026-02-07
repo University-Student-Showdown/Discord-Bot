@@ -65,11 +65,11 @@ class CheckInCommands(commands.Cog):
 
     @rl.command(name="checkin")
     async def check_in_rl(self, ctx):
-        self.check_in(ctx, Game.ROCKET_LEAGUE)
+        await self.check_in(ctx, Game.ROCKET_LEAGUE)
 
     @ow.command(name="checkin")
     async def check_in_ow(self, ctx):
-        self.check_in(ctx, Game.OVERWATCH)
+        await self.check_in(ctx, Game.OVERWATCH)
 
     async def check_in(self, ctx, game:Game):
         gameObj = self.get_game_obj(game);
@@ -254,6 +254,9 @@ class CheckInCommands(commands.Cog):
         self.verifiedPlayersMap.clear()
 
         data: list = self.manager.read_verified()
+
+        if (len(data) < 1):
+            return 
 
         for acc in data:
             if (len(acc) > 1):
