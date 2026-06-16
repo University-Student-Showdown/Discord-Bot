@@ -22,6 +22,8 @@ SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 class Game(Enum):
     OVERWATCH = 0
     ROCKET_LEAGUE = 1
+    DEADLOCK = 2
+    VALORANT = 3
 
 class MyBot(commands.Bot):
     async def on_ready(self):
@@ -46,6 +48,8 @@ class SheetsManagement():
         creds = None
         self.OW_ADMIN_SHEET = os.environ.get("OW_ADMIN_SHEET")
         self.RL_ADMIN_SHEET = os.environ.get("RL_ADMIN_SHEET")
+        self.DL_ADMIN_SHEET = os.environ.get("DL_ADMIN_SHEET")
+        self.VAL_ADMIN_SHEET = os.environ.get("VAL_ADMIN_SHEET")
         self.VERIFICATION_SHEET = os.environ.get("VERIFICATION_SHEET")
 
         BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -88,6 +92,10 @@ class SheetsManagement():
             return self.OW_ADMIN_SHEET
         if (game == Game.ROCKET_LEAGUE):
             return self.RL_ADMIN_SHEET
+        if (game == Game.DEADLOCK):
+            return self.DL_ADMIN_SHEET
+        if (game == Game.VALORANT):
+            return self.VAL_ADMIN_SHEET
         
         return self.OW_ADMIN_SHEET
     
