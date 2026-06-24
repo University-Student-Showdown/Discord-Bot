@@ -10,7 +10,7 @@ parent_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(parent_dir))
 from bot import SheetsManagement, Game
 USS_COLOUR = 0x992299
-ADMIN_ROLES = ["ow admin", "rl admin", "staff lead", "deadlock admin", "valorant admin"]
+ADMIN_ROLES = ["ow admin", "rl admin", "staff lead", "deadlock admin"]
 #CHANNEL_NAMES = ["bot", "check"] # Channels with these words allow commands
 
 def is_admin():
@@ -37,7 +37,7 @@ class CheckInCommands(commands.Cog):
         self.overwatch = GameData()
         self.rocket_league = GameData()
         self.deadlock = GameData()
-        self.valorant = GameData()
+        #self.valorant = GameData()
         self.verifiedPlayersMap = {}
         self.lastRefresh : datetime = datetime.now()
 
@@ -70,10 +70,10 @@ class CheckInCommands(commands.Cog):
             await ctx.reply("Available subcommands: checkin, checkout, getcaptain")
 
     #@allowed_channel()
-    @commands.hybrid_group(name="valorant", aliases=["val", "Valorant", "Val"])
-    async def val(self, ctx):
-        if ctx.invoked_subcommand is None:
-            await ctx.reply("Available subcommands: checkin, checkout, getcaptain")
+    #@commands.hybrid_group(name="valorant", aliases=["val", "Valorant", "Val"])
+    #async def val(self, ctx):
+    #    if ctx.invoked_subcommand is None:
+    #        await ctx.reply("Available subcommands: checkin, checkout, getcaptain")
 
 
     @rl.command(name="checkin")
@@ -88,9 +88,9 @@ class CheckInCommands(commands.Cog):
     async def check_in_dl(self,ctx):
         await self.check_in(ctx, Game.DEADLOCK)
     
-    @val.command(name="checkin")
-    async def check_in_val(self,ctx):
-        await self.check_in(ctx, Game.VALORANT)
+    #@val.command(name="checkin")
+    #async def check_in_val(self,ctx):
+    #    await self.check_in(ctx, Game.VALORANT)
 
     async def check_in(self, ctx, game:Game):
         gameObj = self.get_game_obj(game);
@@ -116,9 +116,9 @@ class CheckInCommands(commands.Cog):
     async def check_out_dl(self,ctx):
         await self.check_out(ctx, Game.DEADLOCK)
     
-    @val.command(name="checkout")
-    async def check_out_val(self,ctx):
-        await self.check_out(ctx, Game.VALORANT)
+    #@val.command(name="checkout")
+    #async def check_out_val(self,ctx):
+    #    await self.check_out(ctx, Game.VALORANT)
 
     async def check_out(self, ctx, game:Game):
         gameObj = self.get_game_obj(game);
@@ -154,9 +154,9 @@ class CheckInCommands(commands.Cog):
     async def get_connection_dl(self,ctx, team :str):
         await self.get_connection(ctx, team, Game.DEADLOCK)
 
-    @val.command(name="getteam")
-    async def get_connection_val(self,ctx, team :str):
-        await self.get_connection(ctx, team, Game.VALORANT)
+    #@val.command(name="getteam")
+    #async def get_connection_val(self,ctx, team :str):
+    #    await self.get_connection(ctx, team, Game.VALORANT)
 
     async def get_connection(self, ctx, team:str, game:Game):
         gameObj = self.get_game_obj(game);
@@ -196,9 +196,9 @@ class CheckInCommands(commands.Cog):
     async def dl_admincheckin(self, ctx):
         return
     
-    @val.group(name="admincheckin")
-    async def val_admincheckin(self, ctx):
-        return
+    #@val.group(name="admincheckin")
+    #async def val_admincheckin(self, ctx):
+    #    return
     
     ## Checkin Open/close
 
@@ -217,10 +217,10 @@ class CheckInCommands(commands.Cog):
     async def open_check_in_dl(self, ctx):
         await self.set_check_in(ctx, Game.DEADLOCK, True)
 
-    @val_admincheckin.command(name="open")
-    @is_admin()
-    async def open_check_in_val(self, ctx):
-        await self.set_check_in(ctx, Game.VALORANT, True)
+    #@val_admincheckin.command(name="open")
+    #@is_admin()
+    #async def open_check_in_val(self, ctx):
+    #    await self.set_check_in(ctx, Game.VALORANT, True)
 
 
 
@@ -242,10 +242,10 @@ class CheckInCommands(commands.Cog):
     async def close_check_in_dl(self, ctx):
         await self.set_check_in(ctx, Game.DEADLOCK, False)
 
-    @val_admincheckin.command(name="close")
-    @is_admin()
-    async def close_check_in_val(self, ctx):
-        await self.set_check_in(ctx, Game.VALORANT, False)
+    #@val_admincheckin.command(name="close")
+    #@is_admin()
+    #async def close_check_in_val(self, ctx):
+    #    await self.set_check_in(ctx, Game.VALORANT, False)
 
     async def set_check_in(self, ctx, game:Game, isOpen:bool):
         gameObj = self.get_game_obj(game);
@@ -269,10 +269,10 @@ class CheckInCommands(commands.Cog):
     async def status_check_in_dl(self, ctx):
         await self.status_check_in(ctx, Game.DEADLOCK)
     
-    @val_admincheckin.command(name="status")
-    @is_admin()
-    async def status_check_in_val(self, ctx):
-        await self.status_check_in(ctx, Game.VALORANT)
+    #@val_admincheckin.command(name="status")
+    #@is_admin()
+    #async def status_check_in_val(self, ctx):
+    #    await self.status_check_in(ctx, Game.VALORANT)
 
     async def status_check_in(self, ctx, game:Game):
         gameObj = self.get_game_obj(game);
@@ -291,8 +291,8 @@ class CheckInCommands(commands.Cog):
             return self.overwatch
         elif (game == Game.DEADLOCK):
             return self.deadlock
-        elif (game == Game.VALORANT):
-            return self.valorant
+        #elif (game == Game.VALORANT):
+            #return self.valorant
         else:
             return self.rocket_league
         
@@ -301,8 +301,8 @@ class CheckInCommands(commands.Cog):
             return "Overwatch"
         elif (game == Game.DEADLOCK):
             return "Deadlock"
-        elif (game == Game.VALORANT):
-            return "Valorant"
+        #elif (game == Game.VALORANT):
+            #return "Valorant"
         else:
             return "Rocket League"
         
@@ -342,11 +342,11 @@ class CheckInCommands(commands.Cog):
                 self.deadlock.teamsMapped[row[0].lower()] = {"discord":row[1], "connections": self.grab_all_exist(row[2:]), "formalised_name": row[0]}
                 self.deadlock.teamsMapped_user[row[1].lower()] = {"team_name":row[0], "connections": self.grab_all_exist(row[2:])}
 
-            self.valorant.teamsMapped.clear()
-            data : list = self.manager.read_data("TeamContact!A2:L", Game.VALORANT)
-            for row in data:
-                self.valorant.teamsMapped[row[0].lower()] = {"discord":row[1], "connections": self.grab_all_exist(row[2:]), "formalised_name": row[0]}
-                self.valorant.teamsMapped_user[row[1].lower()] = {"team_name":row[0], "connections": self.grab_all_exist(row[2:])}
+            #self.valorant.teamsMapped.clear()
+            #data : list = self.manager.read_data("TeamContact!A2:L", Game.VALORANT)
+            #for row in data:
+            #    self.valorant.teamsMapped[row[0].lower()] = {"discord":row[1], "connections": self.grab_all_exist(row[2:]), "formalised_name": row[0]}
+            #    self.valorant.teamsMapped_user[row[1].lower()] = {"team_name":row[0], "connections": self.grab_all_exist(row[2:])}
         except:
             print("Error loading team data..")
 

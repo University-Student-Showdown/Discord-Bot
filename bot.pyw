@@ -7,9 +7,7 @@ import logging
 from os import listdir
 from datetime import datetime
 
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
+from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
@@ -23,7 +21,6 @@ class Game(Enum):
     OVERWATCH = 0
     ROCKET_LEAGUE = 1
     DEADLOCK = 2
-    VALORANT = 3
 
 class MyBot(commands.Bot):
     async def on_ready(self):
@@ -49,43 +46,27 @@ class SheetsManagement():
         self.OW_ADMIN_SHEET = os.environ.get("OW_ADMIN_SHEET")
         self.RL_ADMIN_SHEET = os.environ.get("RL_ADMIN_SHEET")
         self.DL_ADMIN_SHEET = os.environ.get("DL_ADMIN_SHEET")
-        self.VAL_ADMIN_SHEET = os.environ.get("VAL_ADMIN_SHEET")
+        #self.VAL_ADMIN_SHEET = os.environ.get("VAL_ADMIN_SHEET")
         self.VERIFICATION_SHEET = os.environ.get("VERIFICATION_SHEET")
 
         BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-        TOKEN_PATH = os.path.join(BASE_DIR, "token.json")
-        CREDS_PATH = os.path.join(BASE_DIR, "credentials.json")
+        SERVICE_ACCOUNT_PATH = os.path.join(
+            BASE_DIR,
+            "service-account.json"
+        )
 
-        if os.path.exists(TOKEN_PATH):
-            creds = Credentials.from_authorized_user_file(TOKEN_PATH, SCOPES)
+        creds = service_account.Credentials.from_service_account_file(
+            SERVICE_ACCOUNT_PATH,
+            scopes=SCOPES
+        )
 
-        if not creds or not creds.valid:
-            try:
-                if creds and creds.expired and creds.refresh_token:
-                    creds.refresh(Request())
-                else:
-                    raise ValueError("Invalid or missing refresh token")
-            except ValueError:
-                print("[SheetsManagement] Token invalid — regenerating...")
+        self.service = build(
+            "sheets",
+            "v4",
+            credentials=creds
+        )
 
-                # Delete bad token and start new OAuth flow
-                if os.path.exists(TOKEN_PATH):
-                    os.remove(TOKEN_PATH)
-
-                flow = InstalledAppFlow.from_client_secrets_file(
-                    CREDS_PATH, SCOPES
-                )
-                creds = flow.run_local_server(port=0)
-
-                with open(TOKEN_PATH, "w") as token:
-                    token.write(creds.to_json())
-
-        try:
-            self.service = build("sheets", "v4", credentials=creds)
-            self.sheet = self.service.spreadsheets()
-            print("[SheetsManagement] Google Sheets API connected successfully.")
-        except HttpError as err:
-            print("[SheetsManagement] Google Sheets API error:", err)
+        self.sheet = self.service.spreadsheets()
 
     def get_admin_sheet(self, game):
         if (game == Game.OVERWATCH):
@@ -94,8 +75,8 @@ class SheetsManagement():
             return self.RL_ADMIN_SHEET
         if (game == Game.DEADLOCK):
             return self.DL_ADMIN_SHEET
-        if (game == Game.VALORANT):
-            return self.VAL_ADMIN_SHEET
+        #if (game == Game.VALORANT):
+            #return self.VAL_ADMIN_SHEET
         
         return self.OW_ADMIN_SHEET
     
